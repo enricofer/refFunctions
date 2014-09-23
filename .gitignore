@@ -1,0 +1,9 @@
+*.pyc
+Makefile
+*.log
+help/
+i18n/
+scripts/
+test/
+.DS_Store
+plugin_upload.py
