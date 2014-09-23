@@ -221,7 +221,12 @@ def xx(values, feature, parent):
     """
     dbg=debug()
     dbg.out("xx")
-    pass
+    refFeat = QgsGeometry()
+    refFeat.fromWkt(value[0])
+    if refFeat.type()==Qgis.Point:
+        return refFeat.asPoint().x()
+    else:
+        parent.setEvalErrorString("Error: Invalid point geometry")
 
 @qgsfunction(1, "Reference", register=False)
 def yy(values, feature, parent):
@@ -243,7 +248,12 @@ def yy(values, feature, parent):
     """
     dbg=debug()
     dbg.out("yy")
-    pass
+    refFeat = QgsGeometry()
+    refFeat.fromWkt(value[0])
+    if refFeat.type()==Qgis.Point:
+        return refFeat.asPoint().y()
+    else:
+        parent.setEvalErrorString("Error: Invalid point geometry")
 
 @qgsfunction(1, "dbExpressions", register=False)
 def centroid(values, feature, parent):
@@ -265,7 +275,12 @@ def centroid(values, feature, parent):
     """
     dbg=debug()
     dbg.out("centroid")
-    pass
+    refFeat = QgsGeometry()
+    refFeat.fromWkt(value[0])
+    if refFeat.isGeosValid():
+        return refFeat.exportToWkt()
+    else:
+        parent.setEvalErrorString("Error: Invalid geometry")
         
 
 @qgsfunction(1, "Reference", register=False)
@@ -288,7 +303,10 @@ def lenght(values, feature, parent):
     """
     dbg=debug()
     dbg.out("lenght")
-    pass
+    refFeat = QgsGeometry()
+    refFeat.fromWkt(value[0])
+    return refFeat.lenght()
+    
 
 @qgsfunction(1, "Reference", register=False)
 def area(values, feature, parent):
@@ -310,7 +328,9 @@ def area(values, feature, parent):
     """
     dbg=debug()
     dbg.out("area")
-    pass            
+    refFeat = QgsGeometry()
+    refFeat.fromWkt(value[0])
+    return refFeat.area()
 
 @qgsfunction(0,"Reference", register=False)
 def nearestVertex(values, feature, parent):
@@ -375,6 +395,8 @@ def dbnearest(values, feature, parent):
                         dmin = dtest
                         if targetFieldName=="$geometry":
                             dminRes = feat.geometry().exportToWkt()
+                        elif targetFieldName=="$vertex":
+                            dminRes = feat.geometry().closestVertex(actualGeom.centroid().asPoint()).wellKnownText()
                         elif targetFieldName=="$distance":
                             dminRes = dmin
                         else:
@@ -517,6 +539,11 @@ class refFunctions:
         QgsExpression.registerFunction(dbsql)
         QgsExpression.registerFunction(dbnearest)
         QgsExpression.registerFunction(geomRedef)
+        QgsExpression.registerFunction(xx)
+        QgsExpression.registerFunction(yy)
+        QgsExpression.registerFunction(lenght)
+        QgsExpression.registerFunction(area)
+        QgsExpression.registerFunction(centroid)
         # Create action that will start plugin configuration
         #self.action = QAction(
         #    QIcon(":/plugins/multiprint/icon.png"),
@@ -542,5 +569,10 @@ class refFunctions:
         QgsExpression.unregisterFunction('dbsql')
         QgsExpression.unregisterFunction('dbnearest')
         QgsExpression.unregisterFunction('geomRedef')
+        QgsExpression.unregisterFunction('xx')
+        QgsExpression.unregisterFunction('yy')
+        QgsExpression.unregisterFunction('lenght')
+        QgsExpression.unregisterFunction('area')
+        QgsExpression.unregisterFunction('centroid')
 
 
