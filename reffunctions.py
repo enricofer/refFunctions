@@ -378,6 +378,7 @@ def dbnearest(values, feature, parent):
     targetLayerName = values[0]
     targetFieldName = values[1]
     dmin = sys.float_info.max
+    dbg.out(feature)
     actualGeom = feature.geometry()
     if not (targetLayerName in [layer.name() for layer in iface.legendInterface().layers()]):
         parent.setEvalErrorString("error: targetLayer not present")
