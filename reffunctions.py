@@ -415,6 +415,72 @@ def dbnearest(values, feature, parent):
     else:
         parent.setEvalErrorString("error: no features to compare")
 
+@qgsfunction(2, "Reference", register=False)
+def dbwithin(values, feature, parent):
+    """
+        Retrieve target field value when source feature is within target feature in target layer
+        
+        <h4>Syntax</h4>
+        <p>dbwithin(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+        
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+        
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             dbwithin('targetLayer','TargetField') <br> 
+             dbwithin('targetLayer','$geometry') <br> 
+        
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating dbnearest")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    dmin = sys.float_info.max
+    actualGeom = feature.geometry()
+    dbg.out(actualGeom.exportToWkt())
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    fieldSet = [field.name() for field in layerSet[targetLayerName].pendingFields()]
+    if not(targetFieldName in fieldSet):
+        parent.setEvalErrorString("error: targetFieldName not present")
+        return None
+    count = 0
+    dbg.out(layerSet[targetLayerName].getFeatures())
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            #dbg.out(count)
+            if actualGeom.within(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
 def stringToPythonNames(string):
         validPyChars="1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
         stringOK=""
@@ -453,7 +519,7 @@ def unregisterLayers():
 class debug:
 
     def __init__(self):
-        self.debug = True
+        self.debug = None
         
     def out(self,string):
         if self.debug:
@@ -545,6 +611,7 @@ class refFunctions:
         QgsExpression.registerFunction(lenght)
         QgsExpression.registerFunction(area)
         QgsExpression.registerFunction(centroid)
+        QgsExpression.registerFunction(dbwithin)
         # Create action that will start plugin configuration
         #self.action = QAction(
         #    QIcon(":/plugins/multiprint/icon.png"),
@@ -575,5 +642,6 @@ class refFunctions:
         QgsExpression.unregisterFunction('lenght')
         QgsExpression.unregisterFunction('area')
         QgsExpression.unregisterFunction('centroid')
+        QgsExpression.unregisterFunction('dbwithin')
 
 
