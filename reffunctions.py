@@ -27,7 +27,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtSql import *
 #from qgis.core import *
 from qgis.utils import iface,qgsfunction
-from qgis.core import QgsExpression,QgsMapLayer
+from qgis.core import QgsExpression,QgsMapLayer,QgsFeatureRequest
 # Import the code for the dialog
 #from reffunctiondialog import refFunctionDialog
 import os.path
@@ -42,7 +42,7 @@ def dbvalue(values, feature, parent):
         Retrieve first targetField value from targetLayer when keyField is equal to conditionValue 
         
         <h4>Syntax</h4>
-        <p>dqquery(<i>targetLayer,targetField,keyField,conditionValue</i>)</p>
+        <p>dbvalue(<i>targetLayer,targetField,keyField,conditionValue</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
@@ -56,17 +56,18 @@ def dbvalue(values, feature, parent):
         </p>
         <h4>Notes</h4>
         <p>
-             The example function is similar to dbquery('myLayer','myTargetField','myKeyField =value') , bat is significantly faster for large database
+             The example function is similar to dbquery('myLayer','myTargetField','myKeyField =value') , but is significantly faster for large database
         </p>
     """
-    dbg=debug()
+    dbg = debug()
     dbg.out("evaluating dbvalue")
     targetLayerName = values[0]
     targetFieldName = values[1]
     keyFieldName = values[2]
     contentCondition = values[3]
-    if not targetLayerName in iface.legendInterface().layers():
-        parent.setEvalErrorString("error: targetLayer not present")
+
+    #if not targetLayerName in iface.legendInterface().layers():
+    #    parent.setEvalErrorString("error: targetLayer not present")
     #iface = QgsInterface.instance()
     for layer in iface.legendInterface().layers():
         if layer.name() == targetLayerName:
@@ -74,12 +75,64 @@ def dbvalue(values, feature, parent):
             for feat in iter:
                 if feat.attribute(keyFieldName) == contentCondition:
                     if targetFieldName == "$geometry":
-                        return feat.geometry().exportToWkt()
+                        res = feat.geometry().exportToWkt()
                     else:
                         try:
-                            return feat.attribute(targetFieldName)
+                            res = feat.attribute(targetFieldName)
                         except:
                             parent.setEvalErrorString("Error: invalid targetFieldName")
+                            return
+    try:
+        return res
+    except:
+        parent.setEvalErrorString("Error: invalid targetLayerName")
+
+@qgsfunction(3, "Reference", register=False)
+def dbvaluebyid(values, feature, parent):
+    """
+        Retrieve the targetField value from targetLayer using internal feature ID 
+        
+        <h4>Syntax</h4>
+        <p>dbvaluebyid(<i>'targetLayer','targetField',featureID</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetLayer</i> &rarr; a field of targetLayer whom value is needed, for example 'myTargetField'. In case of multiple results only the first is retrieved. If targetLayer = '$geometry' geometry value is retrieved <br></p>
+        <i>  featureID</i> &rarr; A Integer number reference to internal feature ID. <br></p>
+        
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             dbvaluebyid('myLayer','myTargetField',112) <br> 
+        </p>
+    """
+    dbg = debug()
+    dbg.out("evaluating dbvalue")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    targetFeatureId = values[2]
+
+    #if not targetLayerName in iface.legendInterface().layers():
+    #    parent.setEvalErrorString("error: targetLayer not present")
+    #iface = QgsInterface.instance()
+    for layer in iface.legendInterface().layers():
+        if layer.name() == targetLayerName:
+            try:
+                targetFeatureIter = layer.getFeatures(QgsFeatureRequest(targetFeatureId))
+                for targetFeature in targetFeatureIter:
+                    pass
+            except:
+                parent.setEvalErrorString("Error: invalid targetFeatureIndex")
+                return
+            try:
+                res = targetFeature.attribute(targetFieldName)
+            except:
+                parent.setEvalErrorString("Error: invalid targetFieldName")
+                return
+    try:
+        return res
+    except:
+        parent.setEvalErrorString("Error: invalid targetLayerName")
+
 
 
 @qgsfunction(3, "Reference", register=False)
@@ -168,7 +221,7 @@ def dbsql(values, feature, parent):
     else:
         parent.setEvalErrorString("Error: invalid connection")
 
-@qgsfunction(1, "Reference", register=False)
+@qgsfunction(1, "Reference", register=False, usesgeometry=True)
 def geomRedef(values, feature, parent):
     """
         Allow to redefine current feature geometry 
@@ -177,12 +230,11 @@ def geomRedef(values, feature, parent):
         <p>dbsql(<i>geometry</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
+        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands .<br></p>
         
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
-             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+             geomRedef('myGeometry') <br>
         
         </p>
     """
@@ -221,12 +273,7 @@ def xx(values, feature, parent):
     """
     dbg=debug()
     dbg.out("xx")
-    refFeat = QgsGeometry()
-    refFeat.fromWkt(value[0])
-    if refFeat.type()==Qgis.Point:
-        return refFeat.asPoint().x()
-    else:
-        parent.setEvalErrorString("Error: Invalid point geometry")
+    pass
 
 @qgsfunction(1, "Reference", register=False)
 def yy(values, feature, parent):
@@ -248,91 +295,114 @@ def yy(values, feature, parent):
     """
     dbg=debug()
     dbg.out("yy")
-    refFeat = QgsGeometry()
-    refFeat.fromWkt(value[0])
-    if refFeat.type()==Qgis.Point:
-        return refFeat.asPoint().y()
-    else:
-        parent.setEvalErrorString("Error: Invalid point geometry")
+    pass
 
-@qgsfunction(1, "dbExpressions", register=False)
-def centroid(values, feature, parent):
+@qgsfunction(1, "Reference", register=False)
+def WKTcentroid(values, feature, parent):
     """
-        Return the centroid of the given geometry 
+        Return the center of mass of the given geometry
         
         <h4>Syntax</h4>
-        <p>dbsql(<i>geometry</i>)</p>
+        <p>WKTcentroid(<i>'WKTgeometry'</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
+        <p><i>WKTgeometry</i> &rarr; a valid WKTgeometry<br></p>
         
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
-             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+             WKTcentroid('POLYGON((602793.98 6414014.88,....))') <br>
         
         </p>
     """
     dbg=debug()
     dbg.out("centroid")
-    refFeat = QgsGeometry()
-    refFeat.fromWkt(value[0])
-    if refFeat.isGeosValid():
-        return refFeat.exportToWkt()
-    else:
-        parent.setEvalErrorString("Error: Invalid geometry")
+    ArgGeometry = QgsGeometry().fromWkt(values[0])
+    try:
+        return ArgGeometry.centroid().exportToWkt()
+    except:
+        parent.setEvalErrorString("error: WKT geometry not valid")
+        return
         
 
 @qgsfunction(1, "Reference", register=False)
-def lenght(values, feature, parent):
+def WKTpointonsurface(values, feature, parent):
+    """
+        Return the point within  the given geometry
+
+        <h4>Syntax</h4>
+        <p>WKTpointonsurface(<i>'WKTgeometry'</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>WKTgeometry</i> &rarr; a valid WKTgeometry<br></p>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             WKTpointonsurface('POLYGON((602793.98 6414014.88,....))') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("centroid")
+    ArgGeometry = QgsGeometry().fromWkt(values[0])
+    try:
+        return ArgGeometry.pointOnSurface().exportToWkt()
+    except:
+        parent.setEvalErrorString("error: WKT geometry not valid")
+        return
+
+@qgsfunction(1, "Reference", register=False)
+def WKTlenght(values, feature, parent):
     """
         Return the length of the given geometry 
         
         <h4>Syntax</h4>
-        <p>dbsql(<i>geometry</i>)</p>
+        <p>WKTlenght<i>'WKTgeometry'</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+        <p><i>WKTgeometry</i> &rarr; a valid WKTgeometry<br></p>
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
-             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+             WKTlenght('POLYGON((602793.98 6414014.88,....))') <br>
         
         </p>
     """
     dbg=debug()
     dbg.out("lenght")
-    refFeat = QgsGeometry()
-    refFeat.fromWkt(value[0])
-    return refFeat.lenght()
-    
+    ArgGeometry = QgsGeometry().fromWkt(values[0])
+    try:
+        return ArgGeometry.length()
+    except:
+        parent.setEvalErrorString("error: WKT geometry not valid")
+        return
 
 @qgsfunction(1, "Reference", register=False)
-def area(values, feature, parent):
+def WKTarea(values, feature, parent):
     """
-        Return the area of the given geometry 
-        
+        Return the area of the given geometry
+
         <h4>Syntax</h4>
-        <p>dbsql(<i>geometry</i>)</p>
+        <p>WKTarea<i>'WKTgeometry'</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+        <p><i>WKTgeometry</i> &rarr; a valid "Well Known Text" geometry<br></p>
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
-             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+             WKTarea('POLYGON((602793.98 6414014.88,....))') <br>
         
         </p>
     """
     dbg=debug()
     dbg.out("area")
-    refFeat = QgsGeometry()
-    refFeat.fromWkt(value[0])
-    return refFeat.area()
+    ArgGeometry = QgsGeometry().fromWkt(values[0])
+    try:
+        return ArgGeometry.area()
+    except:
+        parent.setEvalErrorString("error: WKT geometry not valid")
+        return
 
-@qgsfunction(0,"Reference", register=False)
+@qgsfunction(0,"Reference", register=False, usesgeometry=True)
 def nearestVertex(values, feature, parent):
     """
         Return the nearest vertex as point geometry
@@ -354,31 +424,34 @@ def nearestVertex(values, feature, parent):
     dbg.out("nearestVertex")
     pass            
 
-@qgsfunction(2, "Reference", register=False)
-def dbnearest(values, feature, parent):
+@qgsfunction(2, "Reference", register=False, usesgeometry=True)
+def geomnearest(values, feature, parent):
     """
-        Retrieve results from SQL query 
-        
+        Retrieve target field value from the nearest target feature in target layer
+
         <h4>Syntax</h4>
-        <p>dbsql(<i>connectionName,sqlQuery</i>)</p>
+        <p>geomnearest(<i>targetLayer,targetField</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  connectionName</i> &rarr; the name of a currently registered database connection, for example 'myConnection'.<br>
-        <i>  sqlQuery</i> &rarr; a valid sql query string where do, for example 'field1 > 1 and field2 = "foo"' <br></p>
-        
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. <br/>
+        If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved. If otherwise is equal to '$distance' the calculated distance between source and target features will be returned<br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbquery('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
-             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+             geomnearest('targetLayer','TargetField') <br>
+             geomnearest('targetLayer','$geometry') <br>
+             geomnearest('targetLayer','$distance') <br>
         
         </p>
     """
     dbg=debug()
-    dbg.out("evaluating dbnearest")
+    dbg.out("evaluating geomnearest")
     targetLayerName = values[0]
     targetFieldName = values[1]
     dmin = sys.float_info.max
-    dbg.out(feature)
     actualGeom = feature.geometry()
     if not (targetLayerName in [layer.name() for layer in iface.legendInterface().layers()]):
         parent.setEvalErrorString("error: targetLayer not present")
@@ -396,10 +469,10 @@ def dbnearest(values, feature, parent):
                         dmin = dtest
                         if targetFieldName=="$geometry":
                             dminRes = feat.geometry().exportToWkt()
-                        elif targetFieldName=="$vertex":
-                            dminRes = feat.geometry().closestVertex(actualGeom.centroid().asPoint()).wellKnownText()
                         elif targetFieldName=="$distance":
                             dminRes = dmin
+                        elif targetFieldName=="$id":
+                            dminRes = feat.id()
                         else:
                             try:
                                 dminRes = feat.attribute(targetFieldName)
@@ -411,17 +484,20 @@ def dbnearest(values, feature, parent):
     dbg.out("DMIN")
     dbg.out(dmin)
     if count > 0:
-        return dminRes
+        try:
+            return dminRes
+        except:
+            return -1
     else:
         parent.setEvalErrorString("error: no features to compare")
 
-@qgsfunction(2, "Reference", register=False)
-def dbwithin(values, feature, parent):
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomwithin(values, feature, parent):
     """
         Retrieve target field value when source feature is within target feature in target layer
         
         <h4>Syntax</h4>
-        <p>dbwithin(<i>targetLayer,targetField</i>)</p>
+        <p>geomwithin(<i>targetLayer,targetField</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
@@ -431,18 +507,79 @@ def dbwithin(values, feature, parent):
         
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbwithin('targetLayer','TargetField') <br> 
-             dbwithin('targetLayer','$geometry') <br> 
+             geomwithin('targetLayer','TargetField') <br>
+             geomwithin('targetLayer','$geometry') <br>
         
         </p>
     """
     dbg=debug()
-    dbg.out("evaluating dbnearest")
+    dbg.out("evaluating geomwithin")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    dmin = sys.float_info.max
-    actualGeom = feature.geometry()
-    dbg.out(actualGeom.exportToWkt())
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    #fieldSet = [field.name() for field in layerSet[targetLayerName].pendingFields()]
+    #if not(targetFieldName in fieldSet):
+    #    parent.setEvalErrorString("error: targetFieldName not present")
+    #    return None
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().within(feat.geometry()):
+                dbg.out('OK:'+str(feat.id()))
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName = '%s' not present" % targetFieldName)
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+            return None
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomtouches(values, feature, parent):
+    """
+        Retrieve target field value when source feature touches target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomtouches(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomtouches('targetLayer','TargetField') <br>
+             geomtouches('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomtouches")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
     layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
@@ -452,19 +589,428 @@ def dbwithin(values, feature, parent):
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
-    fieldSet = [field.name() for field in layerSet[targetLayerName].pendingFields()]
-    if not(targetFieldName in fieldSet):
-        parent.setEvalErrorString("error: targetFieldName not present")
-        return None
     count = 0
-    dbg.out(layerSet[targetLayerName].getFeatures())
     for feat in layerSet[targetLayerName].getFeatures():
         count += 1
         if count < 100000:
-            #dbg.out(count)
-            if actualGeom.within(feat.geometry()):
+            if feature.geometry().touches(feat.geometry()):
                 if targetFieldName=="$geometry":
                     dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomintersects(values, feature, parent):
+    """
+        Retrieve target field value when source feature intersects target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomintersects(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomintersects('targetLayer','TargetField') <br>
+             geomintersects('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomtouches")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().intersects(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False, usesgeometry=True)
+def geomcontains(values, feature, parent):
+    """
+        Retrieve target field value when source feature contains target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomcontains(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomcontains('targetLayer','TargetField') <br>
+             geomcontains('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomcontains")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().contains(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomdisjoint(values, feature, parent):
+    """
+        Retrieve target field value when source feature is disjoint from target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomcontains(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomdisjoint('targetLayer','TargetField') <br>
+             geomdisjoint('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomdisjoint")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().disjoint(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomequals(values, feature, parent):
+    """
+        Retrieve target field value when source feature is equal to target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomequals(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomequals('targetLayer','TargetField') <br>
+             geomequals('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomcontains")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().equals(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomtouches(values, feature, parent):
+    """
+        Retrieve target field value when source feature touches target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomtouches(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomtouches('targetLayer','TargetField') <br>
+             geomtouches('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomcontains")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().touches(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomoverlaps(values, feature, parent):
+    """
+        Retrieve target field value when source feature overlaps target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomoverlaps(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomoverlaps('targetLayer','TargetField') <br>
+             geomoverlaps('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomcontains")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().overlaps(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
+                else:
+                    try:
+                        dminRes = feat.attribute(targetFieldName)
+                    except:
+                        parent.setEvalErrorString("error: targetFieldName not present")
+                        return None
+        else:
+            parent.setEvalErrorString("error: too many features to compare")
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return None
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+def geomcrosses(values, feature, parent):
+    """
+        Retrieve target field value when source feature crosses target feature in target layer
+
+        <h4>Syntax</h4>
+        <p>geomcrosses(<i>targetLayer,targetField</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomcrosses('targetLayer','TargetField') <br>
+             geomcrosses('targetLayer','$geometry') <br>
+
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomcrosses")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    dbg.out(layerSet)
+    dbg.out(layerSet[targetLayerName].id())
+    if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
+        parent.setEvalErrorString("error: targetLayer is not a vector layer")
+        return
+    count = 0
+    for feat in layerSet[targetLayerName].getFeatures():
+        count += 1
+        if count < 100000:
+            if feature.geometry().crosses(feat.geometry()):
+                if targetFieldName=="$geometry":
+                    dminRes = feat.geometry().exportToWkt()
+                elif targetFieldName=="$id":
+                    dminRes = feat.id()
                 else:
                     try:
                         dminRes = feat.attribute(targetFieldName)
@@ -503,8 +1049,8 @@ def registerLayers():
 def %s(values, feature, parent):
     return '%s'""" % (layerNameOK,layer.name().encode('ascii', 'ignore'))
             dbg.out(layerCode)
-            #exec layerCode
-            #QgsExpression.registerFunction(locals()[layerNameOK])
+            exec layerCode
+            QgsExpression.registerFunction(locals()[layerNameOK])
     dbg.out(locals())
 
 def unregisterLayers():
@@ -512,7 +1058,7 @@ def unregisterLayers():
     dbg.out("unregister layer names")
     for layer in iface.legendInterface().layers():
         if layer.type() == QgsMapLayer.VectorLayer:
-            #QgsExpression.unregisterFunction(stringToPythonNames(layer.name()))
+            QgsExpression.unregisterFunction(stringToPythonNames(layer.name()))
             dbg.out(stringToPythonNames(layer.name()))
     dbg.out(locals())
 
@@ -602,16 +1148,23 @@ class refFunctions:
         
         #QgsExpression.registerFunction(EL_DIV)
         QgsExpression.registerFunction(dbvalue)
+        QgsExpression.registerFunction(dbvaluebyid)
         QgsExpression.registerFunction(dbquery)
         QgsExpression.registerFunction(dbsql)
-        QgsExpression.registerFunction(dbnearest)
+        QgsExpression.registerFunction(WKTarea)
+        QgsExpression.registerFunction(WKTcentroid)
+        QgsExpression.registerFunction(WKTpointonsurface)
+        QgsExpression.registerFunction(WKTlenght)
         QgsExpression.registerFunction(geomRedef)
-        QgsExpression.registerFunction(xx)
-        QgsExpression.registerFunction(yy)
-        QgsExpression.registerFunction(lenght)
-        QgsExpression.registerFunction(area)
-        QgsExpression.registerFunction(centroid)
-        QgsExpression.registerFunction(dbwithin)
+        QgsExpression.registerFunction(geomnearest)
+        QgsExpression.registerFunction(geomwithin)
+        QgsExpression.registerFunction(geomcontains)
+        QgsExpression.registerFunction(geomcrosses)
+        QgsExpression.registerFunction(geomdisjoint)
+        QgsExpression.registerFunction(geomequals)
+        QgsExpression.registerFunction(geomintersects)
+        QgsExpression.registerFunction(geomoverlaps)
+        QgsExpression.registerFunction(geomtouches)
         # Create action that will start plugin configuration
         #self.action = QAction(
         #    QIcon(":/plugins/multiprint/icon.png"),
@@ -633,15 +1186,22 @@ class refFunctions:
         #self.iface.removeToolBarIcon(self.action)
         unregisterLayers()
         QgsExpression.unregisterFunction('dbvalue')
+        QgsExpression.unregisterFunction('dbvaluebyid')
         QgsExpression.unregisterFunction('dbquery')
         QgsExpression.unregisterFunction('dbsql')
-        QgsExpression.unregisterFunction('dbnearest')
+        QgsExpression.unregisterFunction('WKTarea')
+        QgsExpression.unregisterFunction('WKTcentroid')
+        QgsExpression.unregisterFunction('WKTpointonsurface')
+        QgsExpression.unregisterFunction('WKTlenght')
         QgsExpression.unregisterFunction('geomRedef')
-        QgsExpression.unregisterFunction('xx')
-        QgsExpression.unregisterFunction('yy')
-        QgsExpression.unregisterFunction('lenght')
-        QgsExpression.unregisterFunction('area')
-        QgsExpression.unregisterFunction('centroid')
-        QgsExpression.unregisterFunction('dbwithin')
+        QgsExpression.unregisterFunction('geomnearest')
+        QgsExpression.unregisterFunction('geomwithin')
+        QgsExpression.unregisterFunction('geomcontains')
+        QgsExpression.unregisterFunction('geomcrosses')
+        QgsExpression.unregisterFunction('geomdisjoint')
+        QgsExpression.unregisterFunction('geomequals')
+        QgsExpression.unregisterFunction('geomintersects')
+        QgsExpression.unregisterFunction('geomoverlaps')
+        QgsExpression.unregisterFunction('geomtouches')
 
 
