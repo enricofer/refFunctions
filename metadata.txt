@@ -10,9 +10,9 @@
 
 [general]
 name=refFunctions
-qgisMinimumVersion=2.0
-description= Reference to feature table funtion for Field Calculator
-version=0.1
+qgisMinimumVersion=2.4
+description= new analytycal and spatial referencing functions for Field Calculator
+version=1.0
 author=enrico ferreguti
 email=enricofer@gmail.com
 
@@ -24,7 +24,7 @@ email=enricofer@gmail.com
 # changelog=
 
 # tags are comma separated with spaces allowed
-tags= expressions, function, database, attributes
+tags= expressions, function, database, attributes, spatial, table, field calculator,reference
 
 homepage=http://geogear.wordpress.com
 tracker=https://github.com/enricofer/refFunctions/issues

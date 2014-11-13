@@ -224,13 +224,13 @@ def dbsql(values, feature, parent):
 @qgsfunction(1, "Reference", register=False, usesgeometry=True)
 def geomRedef(values, feature, parent):
     """
-        Allow to redefine current feature geometry 
+        redefine the current feature geometry with a new WKT geometry
         
         <h4>Syntax</h4>
-        <p>dbsql(<i>geometry</i>)</p>
+        <p>geomRedef(<i>WKTgeometry</i>)</p>
 
         <h4>Arguments</h4>
-        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands .<br></p>
+        <p><i>  WKTgeometry</i> &rarr; a valid WKT geometry provided by expression commands .<br></p>
         
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
@@ -491,6 +491,76 @@ def geomnearest(values, feature, parent):
     else:
         parent.setEvalErrorString("error: no features to compare")
 
+
+@qgsfunction(2, "Reference", register=False, usesgeometry=True)
+def geomdistance(values, feature, parent):
+    """
+        Retrieve target field value from target feature in target layer if target feature is in distance
+
+        <h4>Syntax</h4>
+        <p>geomdistance(<i>'targetLayer','targetField',distanceCheck</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
+        <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. <br/>
+        <i>  distance</i> &rarr; maximum distance from feature to be considered. <br/>
+        If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved. If otherwise is equal to '$distance' the calculated distance between source and target features will be returned<br></p>
+
+        <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
+
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomdistance('targetLayer','TargetField',100) <br>
+             geomdistance('targetLayer','$geometry',100) <br>
+             geomdistance('targetLayer','$distance',100) <br>
+        
+        </p>
+    """
+    dbg=debug()
+    dbg.out("evaluating geomdistance")
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    distanceCheck = values[2]
+    dmin = sys.float_info.max
+    actualGeom = feature.geometry()
+    if not (targetLayerName in [layer.name() for layer in iface.legendInterface().layers()]):
+        parent.setEvalErrorString("error: targetLayer not present")
+        return
+    count = 0
+    for layer in iface.legendInterface().layers():
+        if layer != iface.mapCanvas().currentLayer() and layer.type() == QgsMapLayer.VectorLayer and (targetLayerName == '' or layer.name() == targetLayerName ):
+            dbg.out(layer.name())
+            iter = layer.getFeatures()
+            for feat in iter:
+                dtest = actualGeom.distance(feat.geometry())
+                count += 1
+                if count < 100000:
+                    if dtest<dmin and dtest<=distanceCheck:
+                        dmin = dtest
+                        if targetFieldName=="$geometry":
+                            dminRes = feat.geometry().exportToWkt()
+                        elif targetFieldName=="$distance":
+                            dminRes = dmin
+                        elif targetFieldName=="$id":
+                            dminRes = feat.id()
+                        else:
+                            try:
+                                dminRes = feat.attribute(targetFieldName)
+                            except:
+                                parent.setEvalErrorString("error: targetFieldName not present")
+                                return
+                else:
+                    parent.setEvalErrorString("error: too many features to compare")
+    dbg.out("DMIN")
+    dbg.out(dmin)
+    if count > 0:
+        try:
+            return dminRes
+        except:
+            return -1
+    else:
+        parent.setEvalErrorString("error: no features to compare")
+
 @qgsfunction(2, "Reference", register=False,usesgeometry=True)
 def geomwithin(values, feature, parent):
     """
@@ -584,8 +654,6 @@ def geomtouches(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -761,8 +829,6 @@ def geomdisjoint(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -820,8 +886,6 @@ def geomequals(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -879,8 +943,6 @@ def geomtouches(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -938,8 +1000,6 @@ def geomoverlaps(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -997,8 +1057,6 @@ def geomcrosses(values, feature, parent):
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
-    dbg.out(layerSet)
-    dbg.out(layerSet[targetLayerName].id())
     if layerSet[targetLayerName].type() != QgsMapLayer.VectorLayer:
         parent.setEvalErrorString("error: targetLayer is not a vector layer")
         return
@@ -1026,41 +1084,6 @@ def geomcrosses(values, feature, parent):
             return None
     else:
         parent.setEvalErrorString("error: no features to compare")
-
-def stringToPythonNames(string):
-        validPyChars="1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM_"
-        stringOK=""
-        for char in string.encode('ascii', 'ignore'):
-            if char in validPyChars:
-                stringOK += char
-        return "layer_"+stringOK
-
-def registerLayers():
-    dbg=debug()
-    dbg.out("register layer names")
-    dbg.out("layers loaded")
-    dbg.out(iface.mapCanvas().layers())
-    for layer in iface.legendInterface().layers():
-        if layer.type() == QgsMapLayer.VectorLayer:
-            layerNameOK = stringToPythonNames(layer.name())
-            dbg.out(layerNameOK)
-            layerCode = """
-@qgsfunction(0, "Reference", register=False)
-def %s(values, feature, parent):
-    return '%s'""" % (layerNameOK,layer.name().encode('ascii', 'ignore'))
-            dbg.out(layerCode)
-            exec layerCode
-            QgsExpression.registerFunction(locals()[layerNameOK])
-    dbg.out(locals())
-
-def unregisterLayers():
-    dbg=debug()
-    dbg.out("unregister layer names")
-    for layer in iface.legendInterface().layers():
-        if layer.type() == QgsMapLayer.VectorLayer:
-            QgsExpression.unregisterFunction(stringToPythonNames(layer.name()))
-            dbg.out(stringToPythonNames(layer.name()))
-    dbg.out(locals())
 
 class debug:
 
@@ -1144,9 +1167,6 @@ class refFunctions:
         
     def initGui(self):
         self.dbg.out("initGui")
-        registerLayers()
-        
-        #QgsExpression.registerFunction(EL_DIV)
         QgsExpression.registerFunction(dbvalue)
         QgsExpression.registerFunction(dbvaluebyid)
         QgsExpression.registerFunction(dbquery)
@@ -1157,6 +1177,7 @@ class refFunctions:
         QgsExpression.registerFunction(WKTlenght)
         QgsExpression.registerFunction(geomRedef)
         QgsExpression.registerFunction(geomnearest)
+        QgsExpression.registerFunction(geomdistance)
         QgsExpression.registerFunction(geomwithin)
         QgsExpression.registerFunction(geomcontains)
         QgsExpression.registerFunction(geomcrosses)
@@ -1165,6 +1186,7 @@ class refFunctions:
         QgsExpression.registerFunction(geomintersects)
         QgsExpression.registerFunction(geomoverlaps)
         QgsExpression.registerFunction(geomtouches)
+        #self.dbg.out(QgsExpression.Functions())
         # Create action that will start plugin configuration
         #self.action = QAction(
         #    QIcon(":/plugins/multiprint/icon.png"),
@@ -1181,10 +1203,6 @@ class refFunctions:
         #self.iface.addPluginToMenu(u"&multiPrint", self.action)
 
     def unload(self):
-        # Remove the plugin menu item and icon
-        #self.iface.removePluginMenu(u"&multiPrint", self.action)
-        #self.iface.removeToolBarIcon(self.action)
-        unregisterLayers()
         QgsExpression.unregisterFunction('dbvalue')
         QgsExpression.unregisterFunction('dbvaluebyid')
         QgsExpression.unregisterFunction('dbquery')
@@ -1195,6 +1213,7 @@ class refFunctions:
         QgsExpression.unregisterFunction('WKTlenght')
         QgsExpression.unregisterFunction('geomRedef')
         QgsExpression.unregisterFunction('geomnearest')
+        QgsExpression.unregisterFunction('geomdistance')
         QgsExpression.unregisterFunction('geomwithin')
         QgsExpression.unregisterFunction('geomcontains')
         QgsExpression.unregisterFunction('geomcrosses')
