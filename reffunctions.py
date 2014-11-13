@@ -1186,21 +1186,6 @@ class refFunctions:
         QgsExpression.registerFunction(geomintersects)
         QgsExpression.registerFunction(geomoverlaps)
         QgsExpression.registerFunction(geomtouches)
-        #self.dbg.out(QgsExpression.Functions())
-        # Create action that will start plugin configuration
-        #self.action = QAction(
-        #    QIcon(":/plugins/multiprint/icon.png"),
-        #    u"print multiple print composer views", self.iface.mainWindow())
-        # connect the action to the run method
-        #self.dlg.path.setText(QDesktopServices.storageLocation ( QDesktopServices.DocumentsLocation ))
-        #self.dlg.checkBox.stateChanged.connect(self.selectAllCheckbox)
-        #self.dlg.exportAsPdf.clicked.connect(self.pdfOut)
-        #self.dlg.exportAsImg.clicked.connect(self.imgOut)
-        #self.dlg.browse.clicked.connect(self.browseDir)
-        #self.action.triggered.connect(self.run)
-        # Add toolbar button and menu item
-        #self.iface.addToolBarIcon(self.action)
-        #self.iface.addPluginToMenu(u"&multiPrint", self.action)
 
     def unload(self):
         QgsExpression.unregisterFunction('dbvalue')
