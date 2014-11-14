@@ -22,32 +22,14 @@
 import os
 
 from PyQt4 import QtGui, uic
+from ui_reffunctions import Ui_refFunctionDialog
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'ui_multiprint.ui'))
-
-class multiPrintDialog(QtGui.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
-        """Constructor."""
-        super(multiPrintDialog, self).__init__(parent)
+class refFunctionsDialog(QtGui.QDialog, Ui_refFunctionDialog):
+    def __init__(self):
+        QtGui.QDialog.__init__(self)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
         # self.<objectname>, and you can use autoconnect slots - see
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-
-#from PyQt4 import QtCore, QtGui
-#from ui_multiprint import Ui_multiPrint
-# create the dialog for zoom to point
-
-#class multiPrintDialog(QtGui.QDialog, Ui_multiPrint):
-#class multiPrintDialog(QtGui.QDialog, Ui_multiPrint):
-#    def __init__(self):
-#        QtGui.QDialog.__init__(self)
-#        # Set up the user interface from Designer.
-#        # After setupUI you can access any designer object by doing
-#        # self.<objectname>, and you can use autoconnect slots - see
-#        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-#        # #widgets-and-dialogs-with-auto-connect
-#        self.setupUi(self)

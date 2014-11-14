@@ -29,7 +29,7 @@ from PyQt4.QtSql import *
 from qgis.utils import iface,qgsfunction
 from qgis.core import QgsExpression,QgsMapLayer,QgsFeatureRequest
 # Import the code for the dialog
-#from reffunctiondialog import refFunctionDialog
+from reffunctionsdialog import refFunctionsDialog
 import os.path
 import sys
 
@@ -1160,6 +1160,7 @@ class refFunctions:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         self.dbg = debug()
+        self.dlg = refFunctionsDialog()
 
         # Create the dialog (after translation) and keep reference
         #self.dlg = refFunctionDialog()
@@ -1186,6 +1187,13 @@ class refFunctions:
         QgsExpression.registerFunction(geomintersects)
         QgsExpression.registerFunction(geomoverlaps)
         QgsExpression.registerFunction(geomtouches)
+        icon_path = os.path.join(self.plugin_dir,"icon.png")
+        # map tool action
+        self.action = QAction(QIcon(icon_path),"refFunctions", self.iface.mainWindow())
+        self.action.triggered.connect(self.run)
+        self.iface.addToolBarIcon(self.action)
+        self.iface.addPluginToMenu("&refFunctions", self.action)
+
 
     def unload(self):
         QgsExpression.unregisterFunction('dbvalue')
@@ -1207,5 +1215,8 @@ class refFunctions:
         QgsExpression.unregisterFunction('geomintersects')
         QgsExpression.unregisterFunction('geomoverlaps')
         QgsExpression.unregisterFunction('geomtouches')
+        self.iface.removePluginMenu(u"&refFunctions", self.action)
+        self.iface.removeToolBarIcon(self.action)
 
-
+    def run(self):
+        self.dlg.show()

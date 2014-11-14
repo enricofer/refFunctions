@@ -26,7 +26,7 @@ email=enricofer@gmail.com
 # tags are comma separated with spaces allowed
 tags= expressions, function, database, attributes, spatial, table, field calculator,reference
 
-homepage=http://geogear.wordpress.com
+homepage=http://geogear.wordpress.com/2014/11/13/reffunctions-v1-0/
 tracker=https://github.com/enricofer/refFunctions/issues
 repository=https://github.com/enricofer/refFunctions
 icon=icon-big.png
