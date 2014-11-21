@@ -279,13 +279,13 @@ def xx(values, feature, parent):
     dbg.out("xx")
     pass
 
-@qgsfunction(1, "Reference", register=False)
-def yy(values, feature, parent):
+@qgsfunction(1, "Transformation", register=False)
+def canvaswidth(values, feature, parent):
     """
-        Return the coordinate x of the given point geometry 
+        Return the width of the current canvas width (in pixel or map units) 
         
         <h4>Syntax</h4>
-        <p>dbsql(<i>geometry</i>)</p>
+        <p>CanvasWidth(<i>'units'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
@@ -298,8 +298,112 @@ def yy(values, feature, parent):
         </p>
     """
     dbg=debug()
-    dbg.out("yy")
-    pass
+    dbg.out("CanvasWidth")
+    mapCanvas = iface.mapCanvas()
+    if values[0]=='pixels':
+        res = iface.mapCanvas().mapRenderer().width()
+    elif values[0]=='mapunits':
+        res = iface.mapCanvas().mapRenderer().width()*iface.mapCanvas().mapRenderer().mapUnitsPerPixel ()
+    elif values[0]=='mm':
+        pass
+    try:
+        return res
+    except:
+        parent.setEvalErrorString("error: argument not valid")
+
+
+@qgsfunction(1, "Transformation", register=False)
+def canvasheight(values, feature, parent):
+    """
+        Return the width of the current canvas width (in pixel or map units) 
+        
+        <h4>Syntax</h4>
+        <p>CanvasWidth(<i>'units'</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
+        
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+        
+        </p>
+    """
+    dbg=debug()
+    dbg.out("CanvasWidth")
+    mapCanvas = iface.mapCanvas()
+    if values[0]=='pixels':
+        res = iface.mapCanvas().mapRenderer().height()
+    elif values[0]=='mapunits':
+        res = iface.mapCanvas().mapRenderer().height()*iface.mapCanvas().mapRenderer().mapUnitsPerPixel ()
+    elif values[0]=='mm':
+        pass
+    try:
+        return res
+    except:
+        parent.setEvalErrorString("error: argument not valid")
+
+@qgsfunction(0, "Transformation", register=False, usesgeometry=True)
+def canvasx(values, feature, parent):
+    """
+        Return the width of the current canvas width (in pixel or map units) 
+        
+        <h4>Syntax</h4>
+        <p>CanvasWidth(<i>'units'</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
+        
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+        
+        </p>
+    """
+    dbg=debug()
+    dbg.out("canvasx")
+    if iface.mapCanvas().mapRenderer().extent().intersects(feature.geometry().boundingBox()):
+        leftX = iface.mapCanvas().mapRenderer().extent().xMinimum()
+        featX = feature.geometry().pointOnSurface ().boundingBox().xMinimum()
+        dbg.out(leftX)
+        dbg.out(featX)
+        canvasX = round ((featX-leftX)/iface.mapCanvas().mapRenderer().mapUnitsPerPixel())
+        return canvasX
+    else:
+        return
+
+@qgsfunction(0, "Transformation", register=False, usesgeometry=True)
+def canvasy(values, feature, parent):
+    """
+        Return the width of the current canvas width (in pixel or map units) 
+        
+        <h4>Syntax</h4>
+        <p>CanvasWidth(<i>'units'</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
+        
+        <h4>Example</h4>
+        <p><!-- Show examples of function.-->
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
+        
+        </p>
+    """
+    dbg=debug()
+    dbg.out("canvasy")
+    if iface.mapCanvas().mapRenderer().extent().intersects(feature.geometry().boundingBox()):
+        bottomY = iface.mapCanvas().mapRenderer().extent().yMinimum()
+        featY = feature.geometry().pointOnSurface ().boundingBox().yMinimum()
+        dbg.out(bottomY)
+        dbg.out(featY)
+        canvasY = round ((featY-bottomY)/iface.mapCanvas().mapRenderer().mapUnitsPerPixel())
+        return canvasY
+    else:
+        return
+
 
 @qgsfunction(1, "Reference", register=False)
 def WKTcentroid(values, feature, parent):
@@ -1192,6 +1296,10 @@ class refFunctions:
         QgsExpression.registerFunction(geomintersects)
         QgsExpression.registerFunction(geomoverlaps)
         QgsExpression.registerFunction(geomtouches)
+        QgsExpression.registerFunction(canvaswidth)
+        QgsExpression.registerFunction(canvasheight)
+        QgsExpression.registerFunction(canvasx)
+        QgsExpression.registerFunction(canvasy)
         icon_path = os.path.join(self.plugin_dir,"icon.png")
         # map tool action
         self.action = QAction(QIcon(icon_path),"refFunctions", self.iface.mainWindow())
@@ -1220,6 +1328,10 @@ class refFunctions:
         QgsExpression.unregisterFunction('geomintersects')
         QgsExpression.unregisterFunction('geomoverlaps')
         QgsExpression.unregisterFunction('geomtouches')
+        QgsExpression.unregisterFunction('canvaswidth')
+        QgsExpression.unregisterFunction('canvasheight')
+        QgsExpression.unregisterFunction('canvasx')
+        QgsExpression.unregisterFunction('canvasy')
         self.iface.removePluginMenu(u"&refFunctions", self.action)
         self.iface.removeToolBarIcon(self.action)
 
