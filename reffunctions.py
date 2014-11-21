@@ -27,7 +27,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtSql import *
 #from qgis.core import *
 from qgis.utils import iface,qgsfunction
-from qgis.core import QgsExpression,QgsMapLayer,QgsFeatureRequest
+from qgis.core import QgsGeometry,QgsExpression,QgsMapLayer,QgsFeatureRequest
 # Import the code for the dialog
 from reffunctionsdialog import refFunctionsDialog
 import os.path
@@ -65,10 +65,15 @@ def dbvalue(values, feature, parent):
     targetFieldName = values[1]
     keyFieldName = values[2]
     contentCondition = values[3]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("Error: invalid targetLayerName")
+        return
 
     #if not targetLayerName in iface.legendInterface().layers():
     #    parent.setEvalErrorString("error: targetLayer not present")
     #iface = QgsInterface.instance()
+    res = None
     for layer in iface.legendInterface().layers():
         if layer.name() == targetLayerName:
             iter = layer.getFeatures()
@@ -82,12 +87,9 @@ def dbvalue(values, feature, parent):
                         except:
                             parent.setEvalErrorString("Error: invalid targetFieldName")
                             return
-    try:
-        return res
-    except:
-        parent.setEvalErrorString("Error: invalid targetLayerName")
+    return res
 
-@qgsfunction(3, "Reference", register=False)
+@qgsfunction(3, "Reference", register=False, usesgeometry=True)
 def dbvaluebyid(values, feature, parent):
     """
         Retrieve the targetField value from targetLayer using internal feature ID 
@@ -110,6 +112,10 @@ def dbvaluebyid(values, feature, parent):
     targetLayerName = values[0]
     targetFieldName = values[1]
     targetFeatureId = values[2]
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("Error: invalid targetLayerName")
+        return
 
     #if not targetLayerName in iface.legendInterface().layers():
     #    parent.setEvalErrorString("error: targetLayer not present")
@@ -128,10 +134,7 @@ def dbvaluebyid(values, feature, parent):
             except:
                 parent.setEvalErrorString("Error: invalid targetFieldName")
                 return
-    try:
-        return res
-    except:
-        parent.setEvalErrorString("Error: invalid targetLayerName")
+    return res
 
 
 
@@ -158,12 +161,13 @@ def dbquery(values, feature, parent):
     targetLayerName = values[0].replace('"','')
     targetFieldName = values[1].replace('"','')
     whereClause = values[2].replace('"','')
+    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    if not (targetLayerName in layerSet.keys()):
+        parent.setEvalErrorString("Error: invalid targetLayerName")
+        return
     dbg=debug()
-    dbg.out("evaluating dbsql")
+    dbg.out("evaluating dbquery")
     
-    
-    if not targetLayerName in iface.legendInterface().layers():
-        parent.setEvalErrorString("error: targetLayer not present")
     for iterLayer in iface.legendInterface().layers():
         if iterLayer.name() == targetLayerName:
             exp = QgsExpression(whereClause)
@@ -397,10 +401,11 @@ def WKTarea(values, feature, parent):
     dbg.out("area")
     ArgGeometry = QgsGeometry().fromWkt(values[0])
     try:
+        print ArgGeometry.exportToWkt()
         return ArgGeometry.area()
     except:
-        parent.setEvalErrorString("error: WKT geometry not valid")
-        return
+        #parent.setEvalErrorString("error: WKT geometry not valid")
+        return None
 
 @qgsfunction(0,"Reference", register=False, usesgeometry=True)
 def nearestVertex(values, feature, parent):
