@@ -99,7 +99,7 @@ def dbvaluebyid(values, feature, parent):
 
         <h4>Arguments</h4>
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
-        <i>  targetLayer</i> &rarr; a field of targetLayer whom value is needed, for example 'myTargetField'. In case of multiple results only the first is retrieved. If targetLayer = '$geometry' geometry value is retrieved <br></p>
+        <i>  targetField</i> &rarr; a field of targetLayer whom value is needed, for example 'myTargetField'. In case of multiple results only the first is retrieved. If targetField = '$geometry' geometry value is retrieved <br></p>
         <i>  featureID</i> &rarr; A Integer number reference to internal feature ID. <br></p>
 
         <h4>Example</h4>
@@ -129,11 +129,14 @@ def dbvaluebyid(values, feature, parent):
             except:
                 parent.setEvalErrorString("Error: invalid targetFeatureIndex")
                 return
-            try:
-                res = targetFeature.attribute(targetFieldName)
-            except:
-                parent.setEvalErrorString("Error: invalid targetFieldName")
-                return
+            if targetFieldName == "$geometry":
+                res = targetFeature.geometry().exportToWkt()
+            else:
+                try:
+                    res = targetFeature.attribute(targetFieldName)
+                except:
+                    parent.setEvalErrorString("Error: invalid targetFieldName")
+                    return
     return res
 
 
