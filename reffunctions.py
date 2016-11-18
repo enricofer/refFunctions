@@ -4,7 +4,7 @@
 ReferenceFunctions
                                  A QGIS plugin
  Provide field calculator function for Reference to other layers/features
- based on Nathan Woodrow work: 
+ based on Nathan Woodrow work:
  http://nathanw.net/2012/11/10/user-defined-expression-functions-for-qgis/
                               -------------------
         begin                : 2014-09-20
@@ -33,14 +33,14 @@ from reffunctionsdialog import refFunctionsDialog
 import os.path
 import sys
 
-        
+
 
 
 @qgsfunction(4, "Reference", register=False)
 def dbvalue(values, feature, parent):
     """
-        Retrieve first targetField value from targetLayer when keyField is equal to conditionValue 
-        
+        Retrieve first targetField value from targetLayer when keyField is equal to conditionValue
+
         <h4>Syntax</h4>
         <p>dbvalue(<i>targetLayer,targetField,keyField,conditionValue</i>)</p>
 
@@ -49,10 +49,10 @@ def dbvalue(values, feature, parent):
         <i>  targetLayer</i> &rarr; a field of targetLayer whom value is needed, for example 'myTargetField'. In case of multiple results only the first is retrieved. If targetLayer = '$geometry' geometry value is retrieved <br></p>
         <i>  keyField</i> &rarr; a field of targetLayer used to search between features, for example 'myKeyField'. <br></p>
         <i>  conditionValue</i> &rarr; value used for comparisons with keyField content. Note thet the value need to be of the same type of keyField<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbvalue('myLayer','myTargetField','myKeyField',value) <br> 
+             dbvalue('myLayer','myTargetField','myKeyField',value) <br>
         </p>
         <h4>Notes</h4>
         <p>
@@ -92,8 +92,8 @@ def dbvalue(values, feature, parent):
 @qgsfunction(3, "Reference", register=False, usesgeometry=True)
 def dbvaluebyid(values, feature, parent):
     """
-        Retrieve the targetField value from targetLayer using internal feature ID 
-        
+        Retrieve the targetField value from targetLayer using internal feature ID
+
         <h4>Syntax</h4>
         <p>dbvaluebyid(<i>'targetLayer','targetField',featureID</i>)</p>
 
@@ -101,10 +101,10 @@ def dbvaluebyid(values, feature, parent):
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
         <i>  targetLayer</i> &rarr; a field of targetLayer whom value is needed, for example 'myTargetField'. In case of multiple results only the first is retrieved. If targetLayer = '$geometry' geometry value is retrieved <br></p>
         <i>  featureID</i> &rarr; A Integer number reference to internal feature ID. <br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbvaluebyid('myLayer','myTargetField',112) <br> 
+             dbvaluebyid('myLayer','myTargetField',112) <br>
         </p>
     """
     dbg = debug()
@@ -141,8 +141,8 @@ def dbvaluebyid(values, feature, parent):
 @qgsfunction(3, "Reference", register=False)
 def dbquery(values, feature, parent):
     """
-        Retrieve first targetField value from targetLayer when whereClause is true 
-        
+        Retrieve first targetField value from targetLayer when whereClause is true
+
         <h4>Syntax</h4>
         <p>dqquery(<i>targetLayer,targetField,whereClause</i>)</p>
 
@@ -150,12 +150,12 @@ def dbquery(values, feature, parent):
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
         <i>  targetLayer</i> &rarr; a field of targetLayer whom value is needed, for example 'myField'. In case of multiple results only the first is retrieved. If targetLayer = '$geometry' geometry value is retrieved <br></p>
         <i>  whereClause</i> &rarr; a valid expression string without duoble quotes to identify fields, for example 'field1 > 1 and field2 = "foo"' <br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbquery('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             dbquery('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     targetLayerName = values[0].replace('"','')
@@ -167,7 +167,7 @@ def dbquery(values, feature, parent):
         return
     dbg=debug()
     dbg.out("evaluating dbquery")
-    
+
     for iterLayer in iface.legendInterface().layers():
         if iterLayer.name() == targetLayerName:
             exp = QgsExpression(whereClause)
@@ -186,20 +186,20 @@ def dbquery(values, feature, parent):
 @qgsfunction(2, "Reference", register=False)
 def dbsql(values, feature, parent):
     """
-        Retrieve results from SQL query 
-        
+        Retrieve results from SQL query
+
         <h4>Syntax</h4>
         <p>dbsql(<i>connectionName,sqlQuery</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  connectionName</i> &rarr; the name of a currently registered database connection, for example 'myConnection'.<br>
         <i>  sqlQuery</i> &rarr; a valid sql query string where do, for example 'field1 > 1 and field2 = "foo"' <br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             dbquery('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             dbquery('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -229,17 +229,17 @@ def dbsql(values, feature, parent):
 def geomRedef(values, feature, parent):
     """
         redefine the current feature geometry with a new WKT geometry
-        
+
         <h4>Syntax</h4>
         <p>geomRedef(<i>WKTgeometry</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  WKTgeometry</i> &rarr; a valid WKT geometry provided by expression commands .<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
              geomRedef('myGeometry') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -260,19 +260,19 @@ def geomRedef(values, feature, parent):
 @qgsfunction(1, "Reference", register=False)
 def xx(values, feature, parent):
     """
-        Return the coordinate x of the given point geometry 
-        
+        Return the coordinate x of the given point geometry
+
         <h4>Syntax</h4>
         <p>dbsql(<i>geometry</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -282,19 +282,19 @@ def xx(values, feature, parent):
 @qgsfunction(1, "Transformation", register=False)
 def canvaswidth(values, feature, parent):
     """
-        Return the width of the current canvas width (in pixel or map units) 
-        
+        Return the width of the current canvas width (in pixel or map units)
+
         <h4>Syntax</h4>
         <p>CanvasWidth(<i>'units'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -315,19 +315,19 @@ def canvaswidth(values, feature, parent):
 @qgsfunction(1, "Transformation", register=False)
 def canvasheight(values, feature, parent):
     """
-        Return the width of the current canvas width (in pixel or map units) 
-        
+        Return the width of the current canvas width (in pixel or map units)
+
         <h4>Syntax</h4>
         <p>CanvasWidth(<i>'units'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -347,19 +347,19 @@ def canvasheight(values, feature, parent):
 @qgsfunction(0, "Transformation", register=False, usesgeometry=True)
 def canvasx(values, feature, parent):
     """
-        Return the width of the current canvas width (in pixel or map units) 
-        
+        Return the width of the current canvas width (in pixel or map units)
+
         <h4>Syntax</h4>
         <p>CanvasWidth(<i>'units'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -377,19 +377,19 @@ def canvasx(values, feature, parent):
 @qgsfunction(0, "Transformation", register=False, usesgeometry=True)
 def canvasy(values, feature, parent):
     """
-        Return the width of the current canvas width (in pixel or map units) 
-        
+        Return the width of the current canvas width (in pixel or map units)
+
         <h4>Syntax</h4>
         <p>CanvasWidth(<i>'units'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
@@ -409,17 +409,17 @@ def canvasy(values, feature, parent):
 def WKTcentroid(values, feature, parent):
     """
         Return the center of mass of the given geometry
-        
+
         <h4>Syntax</h4>
         <p>WKTcentroid(<i>'WKTgeometry'</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>WKTgeometry</i> &rarr; a valid WKTgeometry<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
              WKTcentroid('POLYGON((602793.98 6414014.88,....))') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -430,7 +430,7 @@ def WKTcentroid(values, feature, parent):
     except:
         parent.setEvalErrorString("error: WKT geometry not valid")
         return
-        
+
 
 @qgsfunction(1, "Reference", register=False)
 def WKTpointonsurface(values, feature, parent):
@@ -461,8 +461,8 @@ def WKTpointonsurface(values, feature, parent):
 @qgsfunction(1, "Reference", register=False)
 def WKTlenght(values, feature, parent):
     """
-        Return the length of the given geometry 
-        
+        Return the length of the given geometry
+
         <h4>Syntax</h4>
         <p>WKTlenght<i>'WKTgeometry'</i>)</p>
 
@@ -472,7 +472,7 @@ def WKTlenght(values, feature, parent):
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
              WKTlenght('POLYGON((602793.98 6414014.88,....))') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -498,7 +498,7 @@ def WKTarea(values, feature, parent):
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
              WKTarea('POLYGON((602793.98 6414014.88,....))') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -515,23 +515,23 @@ def WKTarea(values, feature, parent):
 def nearestVertex(values, feature, parent):
     """
         Return the nearest vertex as point geometry
-        
+
         <h4>Syntax</h4>
         <p>dbsql(<i>geometry</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  geometry</i> &rarr; a valid geometry provided by expression commands 'myGeometry'.<br></p>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
-             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br> 
+             geomRedef('myLayer','myField','field1 > 1 and field2 = "foo"') <br>
              dbquery('myLayer','$geometry','field1 > 1 and field2 = "foo"') <br></p>
-        
+
         </p>
     """
     dbg=debug()
     dbg.out("nearestVertex")
-    pass            
+    pass
 
 @qgsfunction(2, "Reference", register=False, usesgeometry=True)
 def geomnearest(values, feature, parent):
@@ -553,7 +553,7 @@ def geomnearest(values, feature, parent):
              geomnearest('targetLayer','TargetField') <br>
              geomnearest('targetLayer','$geometry') <br>
              geomnearest('targetLayer','$distance') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -622,7 +622,7 @@ def geomdistance(values, feature, parent):
              geomdistance('targetLayer','TargetField',100) <br>
              geomdistance('targetLayer','$geometry',100) <br>
              geomdistance('targetLayer','$distance',100) <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -674,21 +674,21 @@ def geomdistance(values, feature, parent):
 def geomwithin(values, feature, parent):
     """
         Retrieve target field value when source feature is within target feature in target layer
-        
+
         <h4>Syntax</h4>
         <p>geomwithin(<i>targetLayer,targetField</i>)</p>
 
         <h4>Arguments</h4>
         <p><i>  targetLayer</i> &rarr; the name of a currently loaded layer, for example 'myLayer'.<br>
         <i>  targetField</i> &rarr; a field in target layer we want as result when source feature is within target feature, for example 'myField'. If targetField is equal to '$geometry' The WKT geometry of targetFeature willbe retrieved <br></p>
-        
+
         <i>  Number of feature tested is limited to 100000 to avoid time wasting loops</i>
-        
+
         <h4>Example</h4>
         <p><!-- Show examples of function.-->
              geomwithin('targetLayer','TargetField') <br>
              geomwithin('targetLayer','$geometry') <br>
-        
+
         </p>
     """
     dbg=debug()
@@ -1198,7 +1198,7 @@ class debug:
 
     def __init__(self):
         self.debug = None
-        
+
     def out(self,string):
         if self.debug:
             print string
@@ -1240,7 +1240,7 @@ class SQLconnection:
         self.dbg.out(query.lastError().text())
         if query.lastError().type() != QSqlError.NoError:
             self.error = "Database Error: %s" % query.lastError().text()
-            #QMessageBox.information(None, "SQL ERROR:", resultQuery) 
+            #QMessageBox.information(None, "SQL ERROR:", resultQuery)
         else:
             self.error = ""
             while (query.next()):
@@ -1274,7 +1274,7 @@ class refFunctions:
         # Create the dialog (after translation) and keep reference
         #self.dlg = refFunctionDialog()
 
-        
+
     def initGui(self):
         self.dbg.out("initGui")
         QgsExpression.registerFunction(dbvalue)
