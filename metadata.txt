@@ -15,6 +15,7 @@ description= new analytycal and spatial referencing functions for Field Calculat
 version=1.2
 author=enrico ferreguti
 email=enricofer@gmail.com
+about= Plugin that add custom user functions to Qgis Field calculator for referencing, analitically or spatially, between layers, For example retrieving a value from a layer using as a  field value or a spatial condition (intersects, disjoint ....) as parameter
 
 # end of mandatory metadata
 
