@@ -23,7 +23,7 @@ about= Plugin that add custom user functions to Qgis Field calculator for refere
 
 # Uncomment the following line and add your changelog entries:
 # changelog=v1.1 Db function targetLayer error on not fount fixed
-  code cleanup and dbvaluebyid() is unable to return $geometry issue fixed (courtesy of @SzieberthAdam)
+  v1.2 Code cleanup and dbvaluebyid() is unable to return $geometry issue fixed (courtesy of @SzieberthAdam)
 
 # tags are comma separated with spaces allowed
 tags= expressions, function, database, attributes, spatial, table, field calculator,reference
