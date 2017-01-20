@@ -604,7 +604,7 @@ def geomnearest(values, feature, parent):
         parent.setEvalErrorString("error: no features to compare")
 
 
-@qgsfunction(2, "Reference", register=False, usesgeometry=True)
+@qgsfunction(3, "Reference", register=False, usesgeometry=True)
 def geomdistance(values, feature, parent):
     """
         Retrieve target field value from target feature in target layer if target feature is in distance
