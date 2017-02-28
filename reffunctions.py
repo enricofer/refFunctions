@@ -22,17 +22,28 @@ ReferenceFunctions
  ***************************************************************************/
 """
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtSql import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtSql import *
+try:
+    from qgis.PyQt.QtWidgets import *
+except:
+    pass
 #from qgis.core import *
+import qgis
 from qgis.utils import iface,qgsfunction
 from qgis.core import QgsGeometry,QgsExpression,QgsMapLayer,QgsFeatureRequest
 # Import the code for the dialog
-from reffunctionsdialog import refFunctionsDialog
+from .reffunctionsdialog import refFunctionsDialog
 import os.path
 import sys
 
+
+def _getLayerSet():
+        try:    #qgis 2
+            return {layer.name():layer for layer in iface.legendInterface().layers()}
+        except: #qgis 3
+            return {layer.name():layer for layer in qgis.core.QgsProject.instance().mapLayers().values()}
 
 
 
@@ -65,7 +76,8 @@ def dbvalue(values, feature, parent):
     targetFieldName = values[1]
     keyFieldName = values[2]
     contentCondition = values[3]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("Error: invalid targetLayerName")
         return
@@ -112,7 +124,8 @@ def dbvaluebyid(values, feature, parent):
     targetLayerName = values[0]
     targetFieldName = values[1]
     targetFeatureId = values[2]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("Error: invalid targetLayerName")
         return
@@ -164,7 +177,8 @@ def dbquery(values, feature, parent):
     targetLayerName = values[0].replace('"','')
     targetFieldName = values[1].replace('"','')
     whereClause = values[2].replace('"','')
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("Error: invalid targetLayerName")
         return
@@ -508,7 +522,7 @@ def WKTarea(values, feature, parent):
     dbg.out("area")
     ArgGeometry = QgsGeometry().fromWkt(values[0])
     try:
-        print ArgGeometry.exportToWkt()
+        print(ArgGeometry.exportToWkt() )
         return ArgGeometry.area()
     except:
         #parent.setEvalErrorString("error: WKT geometry not valid")
@@ -698,7 +712,8 @@ def geomwithin(values, feature, parent):
     dbg.out("evaluating geomwithin")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -762,7 +777,8 @@ def geomtouches(values, feature, parent):
     dbg.out("evaluating geomtouches")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -819,7 +835,8 @@ def geomintersects(values, feature, parent):
     dbg.out("evaluating geomtouches")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -878,7 +895,8 @@ def geomcontains(values, feature, parent):
     dbg.out("evaluating geomcontains")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -937,7 +955,8 @@ def geomdisjoint(values, feature, parent):
     dbg.out("evaluating geomdisjoint")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -994,7 +1013,8 @@ def geomequals(values, feature, parent):
     dbg.out("evaluating geomcontains")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -1051,7 +1071,8 @@ def geomtouches(values, feature, parent):
     dbg.out("evaluating geomcontains")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -1108,7 +1129,8 @@ def geomoverlaps(values, feature, parent):
     dbg.out("evaluating geomcontains")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -1165,7 +1187,8 @@ def geomcrosses(values, feature, parent):
     dbg.out("evaluating geomcrosses")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+    layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("error: targetLayer not present")
         return
@@ -1196,6 +1219,117 @@ def geomcrosses(values, feature, parent):
             return None
     else:
         parent.setEvalErrorString("error: no features to compare")
+        
+        
+        
+@qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
+def intersecting_geom_count(values, feature, parent):
+    """
+        Get the count of the features in target layer intersected by the source feature
+        
+        <h4>Syntax</h4>
+        <p>intersecting_geom_count(<i>'target_layer_name'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name </i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             intersecting_geom_count('COUNTRIES') &rarr; 665</p>
+        
+    """ 
+    
+    DEBUG = False
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    #targetFieldName = values[1]
+    
+    if feature.geometry() is not None:        
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+        
+        
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().within(feature.geometry()):
+                count += 1
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+            
+            
+            
+
+@qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
+def intersecting_geom_sum(values, feature, parent):
+    """
+        Sums the geometries' attributes of the target layer intersected by the source feature
+        
+        <h4>Syntax</h4>
+        <p>intersecting_geom_sum(<i>'target_layer_name','Field_name_to_sum'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name</i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        <i> Field_name_to_sum</i> : name of the field to sum, for exemple 'POPULATION' <br></p>
+
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             intersecting_geom_sum('COUNTRIES','POPULATION') &rarr; 2165</p>
+        
+    """ 
+    
+    DEBUG = False
+    
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    
+    if feature.geometry() is not None:
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+            
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0.0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().within(feature.geometry()):
+                try:
+                    count += float(feat[targetFieldName])
+                except:
+                    #case feat[targetFieldName] is null or string....
+                    pass
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+        
 
 class debug:
 
@@ -1204,7 +1338,7 @@ class debug:
 
     def out(self,string):
         if self.debug:
-            print string
+            print(string)
 
 class SQLconnection:
 
@@ -1303,6 +1437,10 @@ class refFunctions:
         QgsExpression.registerFunction(canvasheight)
         QgsExpression.registerFunction(canvasx)
         QgsExpression.registerFunction(canvasy)
+        
+        QgsExpression.registerFunction(intersecting_geom_count)
+        QgsExpression.registerFunction(intersecting_geom_sum)
+        
         icon_path = os.path.join(self.plugin_dir,"icon.png")
         # map tool action
         self.action = QAction(QIcon(icon_path),"refFunctions", self.iface.mainWindow())
@@ -1335,6 +1473,10 @@ class refFunctions:
         QgsExpression.unregisterFunction('canvasheight')
         QgsExpression.unregisterFunction('canvasx')
         QgsExpression.unregisterFunction('canvasy')
+        
+        QgsExpression.unregisterFunction('intersecting_geom_count')
+        QgsExpression.unregisterFunction('intersecting_geom_sum')
+        
         self.iface.removePluginMenu(u"&refFunctions", self.action)
         self.iface.removeToolBarIcon(self.action)
 

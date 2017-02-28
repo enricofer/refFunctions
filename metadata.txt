@@ -12,7 +12,7 @@
 name=refFunctions
 qgisMinimumVersion=2.4
 description= new analytycal and spatial referencing functions for Field Calculator
-version=1.2
+version=1.3
 author=enrico ferreguti
 email=enricofer@gmail.com
 about= Plugin that add custom user functions to Qgis Field calculator for referencing, analitically or spatially, between layers, For example retrieving a value from a layer using as a  field value or a spatial condition (intersects, disjoint ....) as parameter

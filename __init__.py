@@ -23,5 +23,5 @@
 
 def classFactory(iface):
     # load multiPrint class from file multiPrint
-    from reffunctions import refFunctions
+    from .reffunctions import refFunctions
     return refFunctions(iface)
