@@ -1264,7 +1264,7 @@ def intersecting_geom_count(values, feature, parent):
         request = qgis.core.QgsFeatureRequest()
         request.setFilterRect(feature.geometry().boundingBox())
         for feat in layerSet[targetLayerName].getFeatures(request):
-            if feat.geometry().within(feature.geometry()):
+            if feat.geometry().intersects(feature.geometry()):
                 count += 1
         if DEBUG : print('feat ',feature.id(),'count',count)
         return count
@@ -1318,7 +1318,7 @@ def intersecting_geom_sum(values, feature, parent):
         request = qgis.core.QgsFeatureRequest()
         request.setFilterRect(feature.geometry().boundingBox())
         for feat in layerSet[targetLayerName].getFeatures(request):
-            if feat.geometry().within(feature.geometry()):
+            if feat.geometry().intersects(feature.geometry()):
                 try:
                     count += float(feat[targetFieldName])
                 except:
