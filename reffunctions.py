@@ -86,19 +86,16 @@ def dbvalue(values, feature, parent):
     #    parent.setEvalErrorString("error: targetLayer not present")
     #iface = QgsInterface.instance()
     res = None
-    for layer in iface.legendInterface().layers():
-        if layer.name() == targetLayerName:
-            iter = layer.getFeatures()
-            for feat in iter:
-                if feat.attribute(keyFieldName) == contentCondition:
-                    if targetFieldName == "$geometry":
-                        res = feat.geometry().exportToWkt()
-                    else:
-                        try:
-                            res = feat.attribute(targetFieldName)
-                        except:
-                            parent.setEvalErrorString("Error: invalid targetFieldName")
-                            return
+    for feat in layerSet[targetLayerName].getFeatures():
+        if feat.attribute(keyFieldName) == contentCondition:
+            if targetFieldName == "$geometry":
+                res = feat.geometry().exportToWkt()
+            else:
+                try:
+                    res = feat.attribute(targetFieldName)
+                except:
+                    parent.setEvalErrorString("Error: invalid targetFieldName")
+                    return
     return res
 
 @qgsfunction(3, "Reference", register=False, usesgeometry=True)
@@ -133,8 +130,8 @@ def dbvaluebyid(values, feature, parent):
     #if not targetLayerName in iface.legendInterface().layers():
     #    parent.setEvalErrorString("error: targetLayer not present")
     #iface = QgsInterface.instance()
-    for layer in iface.legendInterface().layers():
-        if layer.name() == targetLayerName:
+    for name,layer in layerSet.items():
+        if name == targetLayerName:
             try:
                 targetFeatureIter = layer.getFeatures(QgsFeatureRequest(targetFeatureId))
                 for targetFeature in targetFeatureIter:
@@ -177,7 +174,6 @@ def dbquery(values, feature, parent):
     targetLayerName = values[0].replace('"','')
     targetFieldName = values[1].replace('"','')
     whereClause = values[2].replace('"','')
-    #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
     layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
         parent.setEvalErrorString("Error: invalid targetLayerName")
@@ -185,8 +181,8 @@ def dbquery(values, feature, parent):
     dbg=debug()
     dbg.out("evaluating dbquery")
 
-    for iterLayer in iface.legendInterface().layers():
-        if iterLayer.name() == targetLayerName:
+    for layerName, iterLayer in layerSet.items():
+        if layerName == targetLayerName:
             exp = QgsExpression(whereClause)
             exp.prepare(iterLayer.dataProvider().fields())
             for feat in iterLayer.getFeatures():
@@ -579,11 +575,12 @@ def geomnearest(values, feature, parent):
     targetFieldName = values[1]
     dmin = sys.float_info.max
     actualGeom = feature.geometry()
-    if not (targetLayerName in [layer.name() for layer in iface.legendInterface().layers()]):
+    layerSet = _getLayerSet()
+    if not targetLayerName in layerSet.keys():
         parent.setEvalErrorString("error: targetLayer not present")
         return
     count = 0
-    for layer in iface.legendInterface().layers():
+    for name, layer in layerSet.items():
         if layer != iface.mapCanvas().currentLayer() and layer.type() == QgsMapLayer.VectorLayer and (targetLayerName == '' or layer.name() == targetLayerName ):
             dbg.out(layer.name())
             iter = layer.getFeatures()
@@ -649,11 +646,12 @@ def geomdistance(values, feature, parent):
     distanceCheck = values[2]
     dmin = sys.float_info.max
     actualGeom = feature.geometry()
-    if not (targetLayerName in [layer.name() for layer in iface.legendInterface().layers()]):
+    layerSet = _getLayerSet()
+    if not targetLayerName in layerSet.keys():
         parent.setEvalErrorString("error: targetLayer not present")
         return
     count = 0
-    for layer in iface.legendInterface().layers():
+    for name,layer in layerSet.items():
         if layer != iface.mapCanvas().currentLayer() and layer.type() == QgsMapLayer.VectorLayer and (targetLayerName == '' or layer.name() == targetLayerName ):
             dbg.out(layer.name())
             iter = layer.getFeatures()
