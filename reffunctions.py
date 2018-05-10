@@ -808,7 +808,7 @@ def geomtouches(values, feature, parent):
     else:
         parent.setEvalErrorString("error: no features to compare")
 
-@qgsfunction(2, "Reference", register=False,usesgeometry=True)
+@qgsfunction(-1, "Reference", register=False,usesgeometry=True)
 def geomintersects(values, feature, parent):
     """
         Retrieve target field value when source feature intersects target feature in target layer
@@ -830,9 +830,13 @@ def geomintersects(values, feature, parent):
         </p>
     """
     dbg=debug()
-    dbg.out("evaluating geomtouches")
+    dbg.out("evaluating geomintersects")
     targetLayerName = values[0]
     targetFieldName = values[1]
+    if len(values) == 3:
+        sourceGeometry = values[2]
+    else:
+        sourceGeometry = feature.geometry()
     #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
     layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
@@ -847,7 +851,7 @@ def geomintersects(values, feature, parent):
     for feat in layerSet[targetLayerName].getFeatures():
         count += 1
         if count < 100000:
-            if feature.geometry().intersects(feat.geometry()):
+            if sourceGeometry.intersects(feat.geometry()):
                 if targetFieldName=="$geometry":
                     dminRes = feat.geometry().exportToWkt()
                 elif targetFieldName=="$id":
