@@ -808,7 +808,7 @@ def geomtouches(values, feature, parent):
     else:
         parent.setEvalErrorString("error: no features to compare")
 
-@qgsfunction(-1, "Reference", register=False,usesgeometry=True)
+@qgsfunction(2, "Reference", register=False,usesgeometry=True)
 def geomintersects(values, feature, parent):
     """
         Retrieve target field value when source feature intersects target feature in target layer
@@ -830,13 +830,9 @@ def geomintersects(values, feature, parent):
         </p>
     """
     dbg=debug()
-    dbg.out("evaluating geomintersects")
+    dbg.out("evaluating geomtouches")
     targetLayerName = values[0]
     targetFieldName = values[1]
-    if len(values) == 3:
-        sourceGeometry = values[2]
-    else:
-        sourceGeometry = feature.geometry()
     #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
     layerSet = _getLayerSet()
     if not (targetLayerName in layerSet.keys()):
@@ -851,7 +847,7 @@ def geomintersects(values, feature, parent):
     for feat in layerSet[targetLayerName].getFeatures():
         count += 1
         if count < 100000:
-            if sourceGeometry.intersects(feat.geometry()):
+            if feature.geometry().intersects(feat.geometry()):
                 if targetFieldName=="$geometry":
                     dminRes = feat.geometry().exportToWkt()
                 elif targetFieldName=="$id":
@@ -1274,7 +1270,56 @@ def intersecting_geom_count(values, feature, parent):
     else:
         return False
             
+
+@qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
+def equaling_geom_count(values, feature, parent):
+    """
+        Get the count of the features in target layer equaling (same geometry) by the source feature
+        
+        <h4>Syntax</h4>
+        <p>equaling_geom_count(<i>'target_layer_name'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name </i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             equaling_geom_count('COUNTRIES') &rarr; 665</p>
+        
+    """ 
+    
+    DEBUG = True
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    #targetFieldName = values[1]
+    
+    if feature.geometry() is not None:        
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+        
+        
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
             
+        count = 0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().isGeosEqual(feature.geometry()):
+                count += 1
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False        
             
 
 @qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
@@ -1443,6 +1488,8 @@ class refFunctions:
         QgsExpression.registerFunction(intersecting_geom_count)
         QgsExpression.registerFunction(intersecting_geom_sum)
         
+        QgsExpression.registerFunction(equaling_geom_count)
+        
         icon_path = os.path.join(self.plugin_dir,"icon.png")
         # map tool action
         self.action = QAction(QIcon(icon_path),"refFunctions", self.iface.mainWindow())
@@ -1478,6 +1525,8 @@ class refFunctions:
         
         QgsExpression.unregisterFunction('intersecting_geom_count')
         QgsExpression.unregisterFunction('intersecting_geom_sum')
+        
+        QgsExpression.unregisterFunction('equaling_geom_count')
         
         self.iface.removePluginMenu(u"&refFunctions", self.action)
         self.iface.removeToolBarIcon(self.action)
