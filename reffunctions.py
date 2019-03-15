@@ -89,7 +89,7 @@ def dbvalue(values, feature, parent):
     for feat in layerSet[targetLayerName].getFeatures():
         if feat.attribute(keyFieldName) == contentCondition:
             if targetFieldName == "$geometry":
-                res = feat.geometry().exportToWkt()
+                res = feat.geometry().asWkt()
             else:
                 try:
                     res = feat.attribute(targetFieldName)
@@ -140,7 +140,7 @@ def dbvaluebyid(values, feature, parent):
                 parent.setEvalErrorString("Error: invalid targetFeatureIndex")
                 return
             if targetFieldName == "$geometry":
-                res = targetFeature.geometry().exportToWkt()
+                res = targetFeature.geometry().asWkt()
             else:
                 try:
                     res = targetFeature.attribute(targetFieldName)
@@ -188,7 +188,7 @@ def dbquery(values, feature, parent):
             for feat in iterLayer.getFeatures():
                 if exp.evaluate(feature):
                     if targetFieldName == "$geometry":
-                        return feat.geometry().exportToWkt()
+                        return feat.geometry().asWkt()
                     else:
                         try:
                             return feat.attribute(targetFieldName)
@@ -439,7 +439,7 @@ def WKTcentroid(values, feature, parent):
     dbg.out("centroid")
     ArgGeometry = QgsGeometry().fromWkt(values[0])
     try:
-        return ArgGeometry.centroid().exportToWkt()
+        return ArgGeometry.centroid().asWkt()
     except:
         parent.setEvalErrorString("error: WKT geometry not valid")
         return
@@ -466,7 +466,7 @@ def WKTpointonsurface(values, feature, parent):
     dbg.out("centroid")
     ArgGeometry = QgsGeometry().fromWkt(values[0])
     try:
-        return ArgGeometry.pointOnSurface().exportToWkt()
+        return ArgGeometry.pointOnSurface().asWkt()
     except:
         parent.setEvalErrorString("error: WKT geometry not valid")
         return
@@ -518,7 +518,7 @@ def WKTarea(values, feature, parent):
     dbg.out("area")
     ArgGeometry = QgsGeometry().fromWkt(values[0])
     try:
-        print(ArgGeometry.exportToWkt() )
+        print(ArgGeometry.asWkt() )
         return ArgGeometry.area()
     except:
         #parent.setEvalErrorString("error: WKT geometry not valid")
@@ -591,7 +591,7 @@ def geomnearest(values, feature, parent):
                     if dtest<dmin:
                         dmin = dtest
                         if targetFieldName=="$geometry":
-                            dminRes = feat.geometry().exportToWkt()
+                            dminRes = feat.geometry().asWkt()
                         elif targetFieldName=="$distance":
                             dminRes = dmin
                         elif targetFieldName=="$id":
@@ -662,7 +662,7 @@ def geomdistance(values, feature, parent):
                     if dtest<dmin and dtest<=distanceCheck:
                         dmin = dtest
                         if targetFieldName=="$geometry":
-                            dminRes = feat.geometry().exportToWkt()
+                            dminRes = feat.geometry().asWkt()
                         elif targetFieldName=="$distance":
                             dminRes = dmin
                         elif targetFieldName=="$id":
@@ -730,7 +730,7 @@ def geomwithin(values, feature, parent):
             if feature.geometry().within(feat.geometry()):
                 dbg.out('OK:'+str(feat.id()))
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -789,7 +789,7 @@ def geomtouches(values, feature, parent):
         if count < 100000:
             if feature.geometry().touches(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -849,7 +849,7 @@ def geomintersects(values, feature, parent):
         if count < 100000:
             if feature.geometry().intersects(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -909,7 +909,7 @@ def geomcontains(values, feature, parent):
         if count < 100000:
             if feature.geometry().contains(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -967,7 +967,7 @@ def geomdisjoint(values, feature, parent):
         if count < 100000:
             if feature.geometry().disjoint(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -1025,7 +1025,7 @@ def geomequals(values, feature, parent):
         if count < 100000:
             if feature.geometry().equals(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -1083,7 +1083,7 @@ def geomtouches(values, feature, parent):
         if count < 100000:
             if feature.geometry().touches(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -1141,7 +1141,7 @@ def geomoverlaps(values, feature, parent):
         if count < 100000:
             if feature.geometry().overlaps(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
@@ -1199,7 +1199,7 @@ def geomcrosses(values, feature, parent):
         if count < 100000:
             if feature.geometry().crosses(feat.geometry()):
                 if targetFieldName=="$geometry":
-                    dminRes = feat.geometry().exportToWkt()
+                    dminRes = feat.geometry().asWkt()
                 elif targetFieldName=="$id":
                     dminRes = feat.id()
                 else:
