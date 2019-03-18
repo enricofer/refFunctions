@@ -1272,6 +1272,109 @@ def intersecting_geom_count(values, feature, parent):
             
 
 @qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
+def within_geom_count(values, feature, parent):
+    """
+        Get the count of the features in target layer within  the source feature
+        
+        <h4>Syntax</h4>
+        <p>within_geom_count(<i>'target_layer_name'</i>)</p>
+
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name </i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             within_geom_count('COUNTRIES') &rarr; 665</p>
+        
+    """ 
+    
+    DEBUG = False
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    #targetFieldName = values[1]
+    
+    if feature.geometry() is not None:        
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+        
+        
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().within(feature.geometry()):
+                count += 1
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+        
+@qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
+def overlapping_geom_count(values, feature, parent):
+    """
+        Get the count of the features in target layer overlaping  the source feature
+        
+        <h4>Syntax</h4>
+        <p>overlapping_geom_count(<i>'target_layer_name'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name </i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             overlapping_geom_count('COUNTRIES') &rarr; 665</p>
+        
+    """ 
+    
+    DEBUG = False
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    #targetFieldName = values[1]
+    
+    if feature.geometry() is not None:        
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+        
+        
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().overlaps(feature.geometry()):
+                count += 1
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+
+            
+
+@qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
 def equaling_geom_count(values, feature, parent):
     """
         Get the count of the features in target layer equaling (same geometry) by the source feature
@@ -1319,9 +1422,10 @@ def equaling_geom_count(values, feature, parent):
         return count
         
     else:
-        return False        
+        return False 
             
-
+            
+            
 @qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
 def intersecting_geom_sum(values, feature, parent):
     """
@@ -1377,7 +1481,122 @@ def intersecting_geom_sum(values, feature, parent):
     else:
         return False
         
+        
 
+@qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
+def within_geom_sum(values, feature, parent):
+    """
+        Sums the geometries' attributes of the target layer within  the source feature
+        
+        <h4>Syntax</h4>
+        <p>within_geom_sum(<i>'target_layer_name','Field_name_to_sum'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name</i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        <i> Field_name_to_sum</i> : name of the field to sum, for exemple 'POPULATION' <br></p>
+
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             within_geom_sum('COUNTRIES','POPULATION') &rarr; 2165</p>
+        
+    """ 
+    
+    DEBUG = False
+    
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    
+    if feature.geometry() is not None:
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+            
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0.0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().within(feature.geometry()):
+                try:
+                    count += float(feat[targetFieldName])
+                except:
+                    #case feat[targetFieldName] is null or string....
+                    pass
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+        
+
+@qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
+def overlapping_geom_sum(values, feature, parent):
+    """
+        Sums the geometries' attributes of the target layer within  the source feature
+        
+        <h4>Syntax</h4>
+        <p>overlapping_geom_sum(<i>'target_layer_name','Field_name_to_sum'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name</i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        <i> Field_name_to_sum</i> : name of the field to sum, for exemple 'POPULATION' <br></p>
+
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             overlapping_geom_sum('COUNTRIES','POPULATION') &rarr; 2165</p>
+        
+    """ 
+    
+    DEBUG = False
+    
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    targetFieldName = values[1]
+    
+    if feature.geometry() is not None:
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+            
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0.0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().overlaps(feature.geometry()):
+                try:
+                    count += float(feat[targetFieldName])
+                except:
+                    #case feat[targetFieldName] is null or string....
+                    pass
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False
+        
+        
+        
+        
 class debug:
 
     def __init__(self):
@@ -1486,7 +1705,11 @@ class refFunctions:
         QgsExpression.registerFunction(canvasy)
         
         QgsExpression.registerFunction(intersecting_geom_count)
+        QgsExpression.registerFunction(within_geom_count)
+        QgsExpression.registerFunction(overlapping_geom_count)
         QgsExpression.registerFunction(intersecting_geom_sum)
+        QgsExpression.registerFunction(within_geom_sum)
+        QgsExpression.registerFunction(overlapping_geom_sum)
         
         QgsExpression.registerFunction(equaling_geom_count)
         
@@ -1524,7 +1747,11 @@ class refFunctions:
         QgsExpression.unregisterFunction('canvasy')
         
         QgsExpression.unregisterFunction('intersecting_geom_count')
+        QgsExpression.unregisterFunction('within_geom_count')
+        QgsExpression.unregisterFunction('overlapping_geom_count')
         QgsExpression.unregisterFunction('intersecting_geom_sum')
+        QgsExpression.unregisterFunction('within_geom_sum')
+        QgsExpression.unregisterFunction('overlapping_geom_sum')
         
         QgsExpression.unregisterFunction('equaling_geom_count')
         
