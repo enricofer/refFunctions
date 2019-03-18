@@ -1374,6 +1374,58 @@ def overlapping_geom_count(values, feature, parent):
 
             
 
+@qgsfunction(args=1, group='Reference',register = False, usesgeometry=True)
+def equaling_geom_count(values, feature, parent):
+    """
+        Get the count of the features in target layer equaling (same geometry) by the source feature
+        
+        <h4>Syntax</h4>
+        <p>equaling_geom_count(<i>'target_layer_name'</i>)</p>
+        <h4>Arguments</h4>
+        <p><i>  target_layer_name </i> : name of the target layer, for exemple 'COUNTRIES'.<br>
+        
+        <h4>Example</h4>
+        <p><!-- Show example of function.-->
+             equaling_geom_count('COUNTRIES') &rarr; 665</p>
+        
+    """ 
+    
+    DEBUG = True
+    try:    #qgis 3
+        if DEBUG : print('feat geom ',feature.geometry().asPolygon(), feature.geometry().area(), feature.hasGeometry())
+    except: #qgis 2
+        if DEBUG : print('feat geom ', feature.geometry())
+    
+    targetLayerName = values[0]
+    #targetFieldName = values[1]
+    
+    if feature.geometry() is not None:        
+        #layerSet = {layer.name():layer for layer in iface.legendInterface().layers()}
+        layerSet = _getLayerSet()
+        
+        
+        if not (targetLayerName in layerSet.keys()):
+            parent.setEvalErrorString("error: targetLayer not present")
+            return
+        if layerSet[targetLayerName].type() != qgis.core.QgsMapLayer.VectorLayer:
+            parent.setEvalErrorString("error: targetLayer is not a vector layer")
+            return
+            
+        count = 0
+        
+        request = qgis.core.QgsFeatureRequest()
+        request.setFilterRect(feature.geometry().boundingBox())
+        for feat in layerSet[targetLayerName].getFeatures(request):
+            if feat.geometry().isGeosEqual(feature.geometry()):
+                count += 1
+        if DEBUG : print('feat ',feature.id(),'count',count)
+        return count
+        
+    else:
+        return False 
+            
+            
+            
 @qgsfunction(args=2, group='Reference',register = False, usesgeometry=True)
 def intersecting_geom_sum(values, feature, parent):
     """
