@@ -11,9 +11,9 @@
 [general]
 name=refFunctions
 qgisMinimumVersion=3.3
-qgisMaximumVersion=3.99
+qgisMaximumVersion=3.14
 description= new analytycal and spatial referencing functions for Field Calculator
-version=1.6
+version=1.7
 author=enrico ferreguti
 email=enricofer@gmail.com
 about= Plugin that add custom user functions to Qgis Field calculator for referencing, analitically or spatially, between layers, For example retrieving a value from a layer using as a  field value or a spatial condition (intersects, disjoint ....) as parameter
@@ -29,6 +29,7 @@ about= Plugin that add custom user functions to Qgis Field calculator for refere
   v1.4 intersecting_geom_count/sum issue fixed (courtesy of @nantodevison https://github.com/enricofer/refFunctions/issues/11)
   v1.5 dbquery dbvalue dbnearest issues fixed
   v1.6 added equaling_geom_count function (courtesy of https://github.com/jaitor1), added functions within, overlapping to geom_count and geom_sum(https://github.com/patricev), api break to 3.4
+  v1.7 plugin not available for releases >= 3.16
 
 # tags are comma separated with spaces allowed
 tags= expressions, function, database, attributes, spatial, table, field calculator,reference

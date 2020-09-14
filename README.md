@@ -1,4 +1,7 @@
 #refFunctions v1.0#
+
+the plugin, starting from upcoming QGIS release 3.16, will be replaced by newly available overlay functions: [https://github.com/qgis/QGIS/pull/38405](https://github.com/qgis/QGIS/pull/38405)
+
 the QGIS plugin provide a 'Reference' group under field calculator with function for analytical or spatial reference to featurse in other layers.  
 Uninstalling plugin removes funtions from field calculator
 ##Table functions:
